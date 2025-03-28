@@ -53,7 +53,7 @@ const DateOfBirthScreen = () => {
       const dateOfBirth = `${day}/${month}/${year}`
       saveRegistrationProgress('dateOfBirth', dateOfBirth)
     }
-    navigation.navigate('Gender')
+    navigation.navigate('Location')
   }
 
   return (

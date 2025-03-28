@@ -103,7 +103,7 @@ app.post('/sendOtp', async(req, res) => {
     }
 
     const signUpParams = {
-        ClientId: '7ahftivg9h2i2pek766p45fu68',
+        ClientId: '6eagcfa23b96blfm5u7j807km2',
         Username: email,
         Password: password,
         UserAttributes: [
@@ -124,14 +124,13 @@ app.post('/sendOtp', async(req, res) => {
         console.error("Error sending OTP:", error);
         res.status(400).json({ error: error.message || 'Failed to send OTP. Please try again', details: error.message });
     }
-
 })
 
 app.post('/resendOtp', async(req, res) => {
     const {email} = req.body;
 
     const resendOtpParams = {
-        ClientId: '7ahftivg9h2i2pek766p45fu68',
+        ClientId: '6eagcfa23b96blfm5u7j807km2',
         Username: email
     }
 
@@ -154,7 +153,7 @@ app.post('/confirmSignUp', async(req, res) => {
     // }
 
     const confirmParams = {
-        ClientId: '7ahftivg9h2i2pek766p45fu68',
+        ClientId: '6eagcfa23b96blfm5u7j807km2',
         Username: email,
         ConfirmationCode: enteredotp
     }
@@ -480,7 +479,7 @@ app.post('/login', async(req,res) => {
 
     const authParams={
         AuthFlow: 'USER_PASSWORD_AUTH',
-        ClientId: '6lb67n2bu41pnt9048qch5fsdm',
+        ClientId: '6eagcfa23b96blfm5u7j807km2',
         AuthParameter:{
             USERNAME: email,
             PASSWORD: password

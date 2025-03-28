@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const LoginScreen = () => {
   const [ word, setWord ] = useState('')
-  const [ option, setOption ] = useState('Create account')
+  const [ option, setOption ] = useState('Sign In')
   const navigation = useNavigation()
   const [ password, setPassword ] = useState('')
   const { token, setToken } = useContext(AuthContext)
@@ -153,6 +153,8 @@ const LoginScreen = () => {
               borderRadius: 30,
               marginLeft: 'auto',
               marginRight: 'auto',
+              padding: 15,
+              borderRadius: 30,
             }}>
               <Text style={{
                 textAlign: 'center',
@@ -167,9 +169,11 @@ const LoginScreen = () => {
             style={{
               width: 300,
               backgroundColor: option == 'Sign In' ? '#581845' : 'transparent',
-              borderRadius: 30,
+              borderRadius: 6,
               marginLeft: 'auto',
               marginRight: 'auto',
+              padding: 15,
+              borderRadius: 30,
             }}>
               <Text
               style={{

@@ -10,6 +10,7 @@ import Ionicons  from '@react-native-vector-icons/ionicons'
 import { useNavigation } from '@react-navigation/native'
 import { saveRegistrationProgress } from '../utils/registrationUtils'
 import { PermissionsAndroid, Alert } from 'react-native';
+import { useState } from 'react'
 
 const LocationScreen = () => {
   const navigation = useNavigation();

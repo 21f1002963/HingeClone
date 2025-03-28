@@ -19,7 +19,7 @@ const NameScreen = () => {
     if(firstName.trim() !== '') {
       saveRegistrationProgress('Name', { firstName })
     }
-    navigation.navigate('Birth')
+    navigation.navigate('Email')
   }
   return (
     <SafeAreaView
