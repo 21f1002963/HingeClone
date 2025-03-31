@@ -36,7 +36,7 @@ const PasswordScreen = () => {
 
   const handleNext = () => {
     if(password.trim() !== '') {
-      saveRegistrationProgress('password', password)
+      saveRegistrationProgress('Password', {password})
     }
     handleSendOtp();
   }

@@ -79,7 +79,9 @@ const LikesScreen = () => {
         marginBottom: 10
       }}>{like.userId?.firstName}</Text>
 
-      <View style={{
+      <View 
+      blurRadius={20}
+      style={{ 
         height: 220,
         width: profileWidth,
         borderBottomLeftRadius: 8,
@@ -90,6 +92,33 @@ const LikesScreen = () => {
       </View> 
     </Pressable>
   }
+
+  if(loading){
+    return (
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F8F8F8'
+      }}>
+        <LottieView 
+        source={require('../assets/loading2.json')}
+          style={{
+            height: 180,
+            width: 300,
+            alignSelf: 'center',
+            marginTop: 40,
+            justifyContent: 'center',
+          }}
+          autoPlay
+          loop={true}
+          speed={0.7}
+        >
+        </LottieView>
+      </View>
+    )
+  }
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
       <ScrollView contentContainerStyle={{flexGrow: 1, backgroundColor: 'white', justifyContent: likes.length > 0 ? 'flex-start' : 'center', padding: 15}}>
@@ -137,7 +166,20 @@ const LikesScreen = () => {
 
             <View style={{marginTop: 15}}>
                 {likes.length > 0 && (
-                  <Pressable style={{
+                  <Pressable 
+                  onPress={() => navigation.navigate('HandleLike', 
+                    {
+                      userId,
+                      selectedUserId: likes[0].userId?.userId,
+                      name: likes[0].userId?.firstName,
+                      imageUrls: likes[0]?.userId.imageUrls,
+                      image: likes[0]?.image,
+                      prompts: likes[0]?.userId?.prompts,
+                      likes: likes.length,
+                      type: likes[0]?.type,
+                      prompt: likes[0]?.prompt,
+                    })}
+                  style={{
                     padding: 10,
                     borderColor: '#E0E0E0',
                     borderWidth: 2,
@@ -256,7 +298,18 @@ const LikesScreen = () => {
               </View>
             </View>
 
-            
+            <FlatList
+              data={likes?.slice(1)}
+              renderItem={renderProfile}
+              keyExtractor={(item, index) => index.toString()}
+              numColumns={2}
+              columnWrapperStyle={{
+                justifyContent: 'space-between',
+              }}
+              contentContainerStyle={{
+                paddingBottom: 20,
+              }}
+            />
           </>
         ) : (
           <View style={{

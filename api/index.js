@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
-import dayjs from 'dayjs';
 import {
   DynamoDBClient,
   PutItemCommand,
@@ -26,9 +25,6 @@ import {
   GetCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import {profile} from 'console';
-import http from 'http';
-import {Server, Socket} from 'socket.io';
 
 const app = express();
 app.use(cors());
@@ -43,8 +39,8 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-const dynamoDbClient = new DynamoDBClient({ region: 'eu-north-1' });
-const cognitoClient = new CognitoIdentityProviderClient({ region: 'eu-north-1' });
+const dynamoDbClient = new DynamoDBClient({ region: 'us-east-1' });
+const cognitoClient = new CognitoIdentityProviderClient({ region: 'us-east-1' });
 
 app.post('/register', async (req, res) => {
     try {
@@ -55,20 +51,20 @@ app.post('/register', async (req, res) => {
         const newUser = {
             userId: userId,
             email: userData.Email,
-            password: hashedPassword || '',
+            password: hashedPassword,
             firstName: userData.firstName,
             lastName: userData.lastName || '',
-            gender: userData.gender || '',
+            gender: userData.gender,
             dateOfBirth: userData.dateOfBirth || '',
             type: userData.type,
             location: userData.location || '',
             hometown: userData.hometown,
             workPlace: userData.workPlace || '',
             jobTitle: userData.jobTitle || '',
-            datingPreference: userData.datingPreference || [],
-            lookingFor: userData.lookingFor || [],
-            imageURLs: userData.imageUrls || [],
-            prompts: userData.prompts || [],
+            datingPreference: userData.datingPreference,
+            lookingFor: userData.LookingFor,
+            imageUrls: userData.imageUrls || [],
+            prompts: userData.prompts,
             likes: 2,
             roses: 1,
             likedProfiles: [],
@@ -116,7 +112,6 @@ app.post('/sendOtp', async(req, res) => {
 
     try{
         const command = new SignUpCommand(signUpParams);
-        console.log("Command:", command);
         await cognitoClient.send(command);
         res.status(200).json({message: 'OTP sent successfully'});
     } catch(error){
@@ -476,11 +471,10 @@ app.get('/recieved-likes/:userId', authenticateToken, async (req, res) => {
 
 app.post('/login', async(req,res) => {
     const {email, password} = req.body;
-
     const authParams={
         AuthFlow: 'USER_PASSWORD_AUTH',
         ClientId: '6eagcfa23b96blfm5u7j807km2',
-        AuthParameter:{
+        AuthParameters:{
             USERNAME: email,
             PASSWORD: password
         }
@@ -508,7 +502,7 @@ app.post('/login', async(req,res) => {
         }
 
         const user = userResult.Items[0];
-        const userId = user.userId.S;
+        const userId = user?.userId.S;
 
         const secretKey =
             '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0';
@@ -521,3 +515,124 @@ app.post('/login', async(req,res) => {
         res.status(500).json({error: 'Internal server error'});
     }
 })
+
+async function getIndexToRemove(selectedUserId, currentUserId){
+    const result = await docClient.send(
+        new GetCommand({
+            TableName: 'users',
+            Key: { userId: selectedUserId },
+        })
+    )
+
+    const likedProfiles = result?.Item?.receivedLikes || [];
+    return likedProfiles?.findIndex(like => like.likedUserId === currentUserId);
+
+}
+
+app.post('/create-match', authenticateToken, async (req, res) => {
+    try{
+        const {currentUserId, selectedUserId} = req.body;
+        const userResponse = await docClient.send(new GetCommand({
+            TableName: 'users',
+            Key: { userId: currentUserId },
+        }));
+
+        const receivedLikes = userResponse?.Item?.receivedLikes || [];
+
+        const IndexToRemove = receivedLikes.findIndex(like => like.userId === selectedUserId);
+
+        if(IndexToRemove == -1) {
+            return res.status(400).json({message: "Selected user not found in receivedLikes"})
+        }
+
+        const index = await getIndexToRemove(currentUserId, selectedUserId)
+
+        if(index == -1){
+            return res.status(400).json({message: 'Current user not in liekdProfiles'})
+        }
+
+        await docClient.send(
+            new UpdateCommand({
+                TableName: 'users',
+                Key: { userId: selectedtUserId },
+                UpdateExpression: `SET #matches = list_append(if_not_exists(#matches, :empty_list), :currentUser) REMOVE #likedProfiles[${index}]`,
+                ExpressionAttributeNames: {
+                    '#matches': 'matches',
+                    '#likedProfiles': 'likedProfiles',  
+                },
+                ExpressionAttributeValues: {
+                    ':currentUser': {L: [{S: currentUserId}]},
+                    ':empty_list': {L: []}
+                },
+            
+    }))
+
+    await docClient.send(
+        new UpdateCommand({
+            TableName: 'users',
+            Key: { userId: currentUserId },
+            UpdateExpression: `SET #matches = list_append(if_not_exists(#matches, :empty_list), :selectedUser)`,
+            ExpressionAttributeNames: {
+                '#matches': 'matches',
+            },
+            ExpressionAttributeValues: {
+                ':selectedUser': {L: [{S: selectedUserId}]},
+                ':empty_list': {L: []}
+            },
+        
+    }))
+
+    await docClient.send(
+        new UpdateCommand({
+            TableName: 'users',
+            Key: { userId: currentUserId },
+            UpdateExpression: `REMOVE #receivedLikes[${IndexToRemove}]`,
+            ExpressionAttributeNames: {
+                '#receivedLikes': 'receivedLikes',
+            },
+        })
+    )
+
+    res.status(200).json({message: 'Match created successfully'}); 
+
+    }catch(error){
+        console.log("Error creating match", error);
+        res.status(500).json({error: 'Internal server error'});
+    }
+})
+
+app.post('/get-matches/:userId', authenticateToken, async (req, res) => {
+    try{
+        const {userId} = req.params;
+
+        const userResult = await docClient.send(new GetCommand({
+            TableName: 'users',
+            Key: { userId },
+            ProjectionExpression: 'matches'
+        }));
+
+        const matches = userResult?.Item?.matches || [];
+
+        if(!matches.length){
+            return res.status(404).json({message: 'No matches found'});
+        }
+
+        const batchGetParams = {
+            RequestItems: {
+                users: {
+                    Keys: matches.map(matchId => ({ userId: matchId })),
+                    ProjectionExpression: 'userId, firstName, imageUrls, prompts'
+                }
+            }
+        }
+
+        const matchResult = await docClient.send(new BatchGetCommand(batchGetParams));
+
+        const matchedUsers = matchResult?.Responses?.users || [];
+
+        res.status(200).json({matches: matchedUsers})
+    }catch(error){
+        console.log("Error fetching matches", error);
+    }
+})
+

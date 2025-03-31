@@ -22,10 +22,11 @@ import LottieView from 'lottie-react-native';
 
 const HomeScreen = () => {
   const navigation = useNavigation()
-  const { userId, setUserId } = useContext(AuthContext)
-  const { users, setUsers } = useContext(AuthContext)
-  const { currentProfile, setCurrentProfile } = useState([users[0]]);
+  const { userId, setUserId, token, setToken } = useContext(AuthContext)
+  const [ users, setUsers ] = useState([])
+  const [ currentProfile, setCurrentProfile ] = useState([users[0]]);
   const { options, setOptions } = useState("Age");
+  
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -33,13 +34,13 @@ const HomeScreen = () => {
       const decodedtoken = jwtDecode(token)
       const userId = decodedtoken.userId
       setUserId(userId)
-  }
+    }
     fetchUser();
   }, [])
 
-  useEffect(() => {
-    fetchUsers()
-  }, [userId])
+  // useEffect(() => {
+  //   fetchUsers()
+  // }, [userId])
 
   useEffect(() => {
     if(users.length > 0){
@@ -66,11 +67,24 @@ const HomeScreen = () => {
     }
   }
 
+  const logout = () => {
+    clearAuthToken();
+  };
+  const clearAuthToken = async () => {
+    try {
+      await AsyncStorage.removeItem('token');
+      setToken('');
+    } catch (error) {
+      console.log('Error', error);
+    }
+  };
+
   return (
     <>
     <ScrollView contentContainerStyle={{flexGrow: 1, marginTop:55, }}>
       <View style = {{flexDirection: 'row', padding: 10, alignItems: 'center', gap: 10}}>
-        <View 
+        <Pressable
+        onPress={logout} 
         style={{
           width: 38,
           height: 38,
@@ -80,7 +94,7 @@ const HomeScreen = () => {
           alignItems: 'center',
         }}>
           <Ionicons name="sparkles-sharp" size={22} color="black"/>
-        </View>
+        </Pressable>
 
         <Pressable onPress={() => setOptions("Age")}  
         style={{
@@ -178,7 +192,7 @@ const HomeScreen = () => {
 
             <View style={{marginVertical: 15}}>
               <View>
-                {currentProfile?.imageUrls.length > 0 && (
+                {currentProfile && currentProfile?.imageUrls && currentProfile?.imageUrls.length > 0 && (
                 <View>
                   <Image style={{
                     width: '100%',
@@ -223,7 +237,7 @@ const HomeScreen = () => {
             </View>
 
             <View style={{marginVertical: 15}}>
-                {currentProfile?.prompts.slice(0, 1).map((prompt, index) => (
+                {currentProfile && currentProfile?.prompts && currentProfile?.prompts.slice(0, 1).map((prompt, index) => (
                   <>
                     <View key={index}
                     style={{
@@ -352,7 +366,7 @@ const HomeScreen = () => {
             </View>
 
             <View>
-              {currentProfile?.imageUrls.slice(1, 3).map((item, index) => (
+              {currentProfile && currentProfile?.imageUrls && currentProfile?.imageUrls.slice(1, 3).map((item, index) => (
                 <View style={{marginVertical: 10}} key={index}>
                   <Image style={{
                     width: '100%',
@@ -396,7 +410,7 @@ const HomeScreen = () => {
             </View> 
 
             <View style={{marginVertical: 15}}>
-              {currentProfile?.prompts.slice(1, 2).map((prompt, index) => (
+              {currentProfile?.prompts && currentProfile?.prompts.slice(1, 2).map((prompt, index) => (
                 <>
                   <View key={index}
                     style={{
@@ -447,7 +461,7 @@ const HomeScreen = () => {
             </View>   
 
             <View>
-              {currentProfile?.imageUrls.slice(3, 4).map((item, index) => (
+              {currentProfile?.imageUrls && currentProfile?.imageUrls.slice(3, 4).map((item, index) => (
                 <View key={index} style={{marginVertical: 10}}>
                   <Image style={{
                     width: '100%',
@@ -491,7 +505,7 @@ const HomeScreen = () => {
             </View>
 
             <View style={{marginVertical: 15}}>
-              {currentProfile?.prompts.slice(2, 3).map((prompt, index) => (
+              {currentProfile?.prompts && currentProfile?.prompts.slice(2, 3).map((prompt, index) => (
                 <>
                   <View key={index}
                     style={{
@@ -542,7 +556,7 @@ const HomeScreen = () => {
             </View>  
 
             <View>
-              {currentProfile?.imageUrls.slice(4, 7).map((item, index) => (
+              {currentProfile?.imageUrls && currentProfile?.imageUrls.slice(4, 7).map((item, index) => (
                 <View key={index} style={{marginVertical: 10}}>
                   <Image style={{
                     width: '100%',

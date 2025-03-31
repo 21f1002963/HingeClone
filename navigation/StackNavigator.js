@@ -35,14 +35,14 @@ import SendLikeScreen from '../screens/SendLikeScreen'
 const StackNavigator = () => {
     const Stack = createNativeStackNavigator();
     const Tab = createBottomTabNavigator();
-    const {token} = useContext(AuthContext)
+    const { token } = useContext(AuthContext)
     function BottomTabs() {
         return (
-            <Tab.Navigator 
-            screenOptions={() => ({
-                tabBarStyle: {height: 90},
-                tabBarShowLabel: false,
-            })}>
+            <Tab.Navigator
+                screenOptions={() => ({
+                    tabBarStyle: { height: 90 },
+                    tabBarShowLabel: false,
+                })}>
                 <Tab.Screen name="Home" component={HomeScreen}
                     options={{
                         tabBarStyle: { backgroundColor: '#101010' },
@@ -95,7 +95,7 @@ const StackNavigator = () => {
         );
     }
 
-    const AuthStack=() => {
+    const AuthStack = () => {
         return (
             <Stack.Navigator>
                 <Stack.Screen name="Login" component={LoginScreen}
@@ -120,29 +120,29 @@ const StackNavigator = () => {
                 />
                 <Stack.Screen name="Password" component={PasswordScreen}
                     options={{
-                    headerShown: false
+                        headerShown: false
                     }}
                 />
                 <Stack.Screen name="OTP" component={OtpScreen}
                     options={{
                         headerShown: false
                     }}
-                /> 
+                />
                 <Stack.Screen name="Birth" component={DateOfBirthScreen}
                     options={{
                         headerShown: false
                     }}
                 />
-                <Stack.Screen name="Location" component={LocationScreen}
+                {/* <Stack.Screen name="Location" component={LocationScreen}
                     options={{
                         headerShown: false
                     }}
-                />
+                /> */}
                 <Stack.Screen name="Gender" component={GenderScreen}
                     options={{
                         headerShown: false
                     }}
-                /> 
+                />
                 <Stack.Screen name="Type" component={TypeScreen}
                     options={{
                         headerShown: false
@@ -216,13 +216,19 @@ const StackNavigator = () => {
                         headerShown: false
                     }}
                 />
+
+                <Stack.Screen name="SendLike" component={HandleLikeScreen}
+                    options={{
+                        headerShown: false
+                    }}
+                />
             </Stack.Navigator>
         );
     }
 
     return (
         <NavigationContainer>
-            {token == null || token == '' ? <AuthStack/> : <MainStack/> }
+            {token == null || token == '' ? <AuthStack /> : <MainStack />}
         </NavigationContainer>
     )
 }

@@ -51,9 +51,9 @@ const DateOfBirthScreen = () => {
   const handleNext = () => {
     if(day.trim() !== '' && month.trim() !== '' && year.trim() !== '') {
       const dateOfBirth = `${day}/${month}/${year}`
-      saveRegistrationProgress('dateOfBirth', dateOfBirth)
+      saveRegistrationProgress('dateOfBirth', {dateOfBirth})
     }
-    navigation.navigate('Location')
+    navigation.navigate('Gender')
   }
 
   return (

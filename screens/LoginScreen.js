@@ -1,4 +1,3 @@
-import { set } from 'core-js/core/dict'
 import { StyleSheet, Text, View, SafeAreaView, Image, KeyboardAvoidingView } from 'react-native'
 import { useState } from 'react'
 import { TextInput } from 'react-native'
@@ -9,10 +8,11 @@ import axios from 'axios'
 import { useContext } from 'react'
 import { AuthContext } from '../AuthContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import {BASE_URL} from '../urls/url'
 
 
 const LoginScreen = () => {
-  const [ word, setWord ] = useState('')
+  const [ email, setEmail ] = useState('')
   const [ option, setOption ] = useState('Sign In')
   const navigation = useNavigation()
   const [ password, setPassword ] = useState('')
@@ -26,12 +26,12 @@ const LoginScreen = () => {
   const signIn = async() => {
     setOption('Sign In')
 
-    if (!word || !password) {
+    if (!email || !password) {
       return;
     }
 
     const user = {
-      email: word,
+      email: email,
       password: password
     }
 
@@ -100,8 +100,8 @@ const LoginScreen = () => {
                     <View style={{flexDirection: "row", alignItems: "center", padding: 14, backgroundColor: 'white', gap: 15, borderColor: '#EOEOEO', borderWidth: 0.6, borderRadius: 8}}>
                       <Text style={{ fontSize: 14, color: "#800080", width : 70}}>Email</Text>
                       <TextInput 
-                        value={word}
-                        onChangeText={text => setWord(text)}
+                        value={email}
+                        onChangeText={text => setEmail(text)}
                         placeholder="User@example.com"
                         placeholderTextColor= {"gray"}
                       ></TextInput>
@@ -115,6 +115,7 @@ const LoginScreen = () => {
                         onChangeText={text => setPassword(text)}
                         placeholder="Required"
                         placeholderTextColor= {"gray"}
+                        secureTextEntry={true}
                       ></TextInput>
                     </View>
                   </View>

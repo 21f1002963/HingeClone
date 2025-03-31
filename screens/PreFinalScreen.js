@@ -11,6 +11,10 @@ const PreFinalScreen = () => {
   const [userData, setUserData] = useState()
   const [loading, setLoading] = useState(false)
   const { token, setToken } = useContext(AuthContext)
+  
+  useEffect(() => {
+    getAllUserData()
+  }, [])
 
   const getAllUserData = async () => {
     try {
@@ -18,15 +22,15 @@ const PreFinalScreen = () => {
         'Name',
         'Email',
         'Password',
-        'Birth',
+        'dateOfBirth',
         'Location',
         'Gender',
         'Type',
         'Dating',
         'LookingFor',
         'Hometown',
-        'Workplace',
-        'JobTitle',
+        'WorkPlace',
+        'Jobtitle',
         'Photos',
         'Prompts',
       ]; 
@@ -39,16 +43,11 @@ const PreFinalScreen = () => {
         }
       }
       setUserData(userData)
+      console.log('User', userData)
     } catch (error) {
       console.log(error)
     }
   }
-
-  useEffect(() => {
-    getAllUserData()
-  }, [])
-
-  console.log('User', userData)
 
   const clearAllScreenData = async () => {
     try {
@@ -90,7 +89,6 @@ const PreFinalScreen = () => {
           const newToken = response.data.token;
           AsyncStorage.setItem('token', newToken);
           setToken(newToken);
-          // navigation.navigate('MainStack');
         });
       clearAllScreenData()
     }
