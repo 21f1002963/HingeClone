@@ -22,11 +22,29 @@ import LottieView from 'lottie-react-native';
 
 const HomeScreen = () => {
   const navigation = useNavigation()
-  const { userId, setUserId, token, setToken } = useContext(AuthContext)
+  const { userId, setUserId, token, setToken, userInfo, setUserInfo } = useContext(AuthContext)
   const [ users, setUsers ] = useState([])
   const [ currentProfile, setCurrentProfile ] = useState([users[0]]);
   const { options, setOptions } = useState("Age");
   
+  const getUserdetails = async () => {
+    try{
+      const response = await axios.get(`${BASE_URL}/user-info`, {
+        params: {
+          userId: userId,
+        },
+      })
+      if(response.status == 200){
+        const userData = response.data.user;
+
+        if(JSON.stringify(userData) !== JSON.stringify(userInfo)){
+          setUserInfo(userData)
+        }
+      }
+    }catch(error){
+      console.log("Error fetching user details", error)
+    }
+  }
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -38,6 +56,18 @@ const HomeScreen = () => {
     fetchUser();
   }, [])
 
+  useEffect(() => {
+    const initialize = async () => { 
+      if(userId){
+        try{
+          await Promise.all([fetchMatches(), getUserdetails()])
+        }catch(error){
+          console.log("Error fetching matches or user details")
+        }
+      }
+    }
+    initialize()
+  }, [userId])
   // useEffect(() => {
   //   fetchUsers()
   // }, [userId])
