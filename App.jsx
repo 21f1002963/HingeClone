@@ -24,6 +24,7 @@ import {
 import Entypo from '@react-native-vector-icons/entypo';
 import StackNavigator from './navigation/StackNavigator';
 import { AuthProvider } from './AuthContext';
+import { SocketContextProvider } from './SocketContext';
 
 function Section({children, title}){
   const isDarkMode = useColorScheme() === 'dark';
@@ -71,7 +72,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <StackNavigator />
+      <SocketContextProvider>
+        <StackNavigator />
+      </SocketContextProvider>
     </AuthProvider>
   );
 }

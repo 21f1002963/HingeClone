@@ -217,7 +217,13 @@ const StackNavigator = () => {
                     }}
                 />
 
-                <Stack.Screen name="SendLike" component={HandleLikeScreen}
+                <Stack.Screen name="HandleLike" component={HandleLikeScreen}
+                    options={{
+                        headerShown: false
+                    }}
+                />
+
+                <Stack.Screen name="ChatRoom" component={ChatRoom}
                     options={{
                         headerShown: false
                     }}

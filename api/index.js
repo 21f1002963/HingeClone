@@ -25,6 +25,8 @@ import {
   GetCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import http from 'http'
+import {Server} from 'socket.io'
 
 const app = express();
 app.use(cors());
@@ -35,12 +37,10 @@ app.use(express.json());
 
 const PORT = 9000;
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-
 const dynamoDbClient = new DynamoDBClient({ region: 'us-east-1' });
 const cognitoClient = new CognitoIdentityProviderClient({ region: 'us-east-1' });
+
+const server = http.createServer(app)
 
 app.post('/register', async (req, res) => {
     try {
@@ -636,3 +636,134 @@ app.post('/get-matches/:userId', authenticateToken, async (req, res) => {
     }
 })
 
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+server.listen(2500, () => {
+    console.log('Server is running on port 2500')
+})
+
+const io = new Server(server)
+
+const userSocketMap = {}
+
+io.on('connection', socket => {
+    const userId = socket.handshake.query.userId;
+
+    if(userId !== undefined){
+        userSocketMap[userId]=socket.id
+    }   
+
+    console.log('User socket data', userSocketMap)
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected',socket.id)
+        delete userSocketMap[userId]
+    })
+
+    socket.on('sendMessage', ({senderId, recieverId, message}) => {
+        const receiverSocketId = userSocketMap[recieverId]
+        console.log('receiver Id', receiverId)
+
+        if(receiverSocketId){
+            io.to(receiverSocketId).emit('receivedMessage', {
+                senderId, 
+                message
+            })
+        }
+    })
+})
+
+app.post('/send-message', authenticateToken, async (req, res) => {
+    try{
+    const {senderId, receiverId, message} = req.body;
+
+    if(!senderId || !receiverId || !message) {
+        return res.status(400).json({error: 'Missing required fields'});
+    }
+
+    const messageId = crypto.randomUUID();
+
+    const params = {
+        TableName: 'messages',
+        Item: {
+            messageId: {S: messageId},
+            senderId: {S: senderId},
+            receiverId: {S: receiverId},
+            message: {S: message},
+            timestamp: {S: new Date().toISOString()}
+        }
+    }
+
+    const command = new PutItemCommand(params);
+    await dynamoDbClient.send(command);
+
+    const receiverSocketId = userSocketMap[receiverId];
+    if(receiverSocketId) {
+        io.to(receiverSocketId).emit('receivedMessage', {
+            senderId,
+            receiverId,
+            message
+        })
+    }else {
+        console.log(`Receiver socket ID not found for user ${receiverId}`);
+    }
+    res.status(201).json({message: 'Message sent successfully'});
+    }catch(error){
+        console.log("Error sending message", error);
+        res.status(500).json({error: 'Internal server error'});
+    }
+})
+
+app.get('/messages', authenticateToken, async (req, res) => {
+    try{
+        const [senderId, receiverId] = req.query;
+
+        if(!senderId || !receiverId) {
+            return res.status(400).json({error: 'Missing required fields'});
+        }
+        const senderParamsQuery = {
+            TableName: 'messages',
+            IndexName: 'senderId-index',
+            KeyConditionExpression: 'senderId = :senderId',
+            ExpressionAttributeValues: {
+                ':senderId': {S: senderId},
+            }
+        }
+
+        const receiverParamsQuery = {
+            TableName: 'messages',
+            IndexName: 'receiverId-index',
+            KeyConditionExpression: 'receiverId = :receiverId',
+            ExpressionAttribteValues: {
+                ':receiverId': {S: senderId},
+            }
+        }
+
+        const senderQueryCommand = new QueryCommand(senderParamsQuery);
+        const receiverQueryCommand = new QueryCommand(receiverParamsQuery);
+
+        const senderResult = await dynamoDbClient.send(senderQueryCommand);
+        const receiverResult = await dynamoDbClient.send(receiverQueryCommand);
+
+        const filteredSenderMessages = senderResult.Items.filter(item => item.receiverId.S === receiverId);
+        const filteredReceiverMessages = receiverResult.Items.filter(item => item.senderId.S === receiverId);
+
+        const combinedMessages = [
+            ...filteredSenderMessages, 
+            ...filteredReceiverMessages
+        ].map(item => ({
+            messageId: item.messageId.S,
+            senderId: item.senderId.S,
+            receiverId: item.receiverId.S,
+            message: item.message.S,
+            timestamp: item.timestamp.S
+        })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        res.status(200).json({messages: combinedMessages});
+    }catch(error){
+        console.log("Error fetching messages", error);
+        res.status(500).json({error: 'Internal server error'});
+    }
+})

@@ -1,19 +1,63 @@
 import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
 import { AuthContext } from '../AuthContext'
-import { useEffect } from 'react'
+import { use, useEffect } from 'react'
 import UserChat from '../components/UserChat'
+import axios from 'axios'
 
 const ChatScreen = () => {
   const [matches, setMatches] = useState([])
-  const {userId, setUserId} = useContext(AuthContext)
+  const { userId, setUserId } = useContext(AuthContext)
   const [isLoading, setIsLoading] = useState(true)
   const [categorizedChats, setCategorizedChats] = useState({
     yourTurn: [],
     theirTurn: [],
   })
 
+  const fetchCategorizedChats = async () => {
+    const yourTurn = []
+    const theirTurn = []
+
+    await Promise.all(
+      matches?.map(async item => {
+        try {
+          const response = await axios.get(`${BASE_URL}/messages`, {
+            params: {
+              senderId: userId,
+              receiverId: item?.userId
+            }
+          })
+
+          const messages = response.data
+          const lastMessage = messages[messages.length - 1]
+
+          if (lastMessage?.senderId === userId) {
+            theirTurn.push({
+              ...item,
+              lastMessage: lastMessage.message,
+            })
+          } else {
+            yourTurn.push({
+              ...item,
+              lastMessage: lastMessage.message,
+            })
+          }
+        } catch (error) {
+          console.error(error)
+        }
+      }))
+
+    setCategorizedChats({
+      yourTurn: yourTurn,
+      theirTurn: theirTurn,
+    })
+  }
+
+  useEffect(() => {
+    fetchCategorizedChats()
+  }, [matches])
+
   const fetchMatches = async () => {
-    try{
+    try {
       const token = await AsyncStorage.getItem('token')
       const response = await axios.get(`${BASE_URL}/get-matches/${userId}`, {
         headers: {
@@ -22,15 +66,15 @@ const ChatScreen = () => {
       })
 
       setMatches(response.data.matches)
-    }catch(error){
+    } catch (error) {
       console.error(error)
-    } finally{
+    } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    if(userId) {
+    if (userId) {
       fetchMatches()
     }
   }, [userId])
@@ -62,32 +106,50 @@ const ChatScreen = () => {
   }
 
   return (
-    <ScrollView style={{marrginTop: 55}} contentContainerStyle={{ flexGrow: 1, backgroundColor: 'white', justifyContent: matches?.length > 0 ? 'flex-start' : 'center' }}> 
+    <ScrollView style={{ marrginTop: 55 }} contentContainerStyle={{ flexGrow: 1, backgroundColor: 'white', justifyContent: matches?.length > 0 ? 'flex-start' : 'center' }}>
       <View>
-        <View style={{marginVertical: 12, marginHorizontal: 15}}>
+        <View style={{ marginVertical: 12, marginHorizontal: 15 }}>
           {matches?.length > 0 ? (
             <>
-              <Text style={{fontSize: 22, fontWeight: 'bold', marginVertical: 12}}>Matches</Text>  
+              <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12 }}>Matches</Text>
 
-              {matches?.map((item, index) => (
-                <UserChat key={index} item={item} userId={userId}/>
-              ))}
+              {categorizedChats?.theirTurn?.length > 0 && (
+                <>
+                  <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12 }}>Their Turn</Text>\
+                  {categorizedChats?.theirTurn?.map((item, index) => (
+                    <UserChat key={index} item={item} userId={userId} />
+                  ))}
+                </>
+              )}
+
+              {categorizedChats?.yourTurn?.length > 0 && (
+                <>
+                  <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12 }}>Your Turn</Text>\
+                  {categorizedChats?.yourTurn?.map((item, index) => (
+                    <UserChat key={index} item={item} userId={userId} />
+                  ))}
+                </>
+              )}
+
+              {/* {matches?.map((item, index) => (
+                <UserChat key={index} item={item} userId={userId} />
+              ))} */}
             </>
           ) : (
-            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <Image
-                style={{width: 100, height: 100}}
+                style={{ width: 100, height: 100 }}
                 source={{
                   uri: 'https://cdn-icons-png.flaticon.com/128/5065/5065340.png',
                 }}
               />
 
-              <View style={{marginTop: 50}}>
-                  <Text style={{fontSize: 22, fontWeight: 'bold', textAlign: 'center'}}>No Matches right now</Text>
-                  <Text style={{color: 'gray', marginTop: 10, fontSize: 15, textAlign: 'center'}}>Matches are more considered on hinge. We can help improve your chances</Text>
+              <View style={{ marginTop: 50 }}>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', textAlign: 'center' }}>No Matches right now</Text>
+                <Text style={{ color: 'gray', marginTop: 10, fontSize: 15, textAlign: 'center' }}>Matches are more considered on hinge. We can help improve your chances</Text>
               </View>
 
-              <View style={{marginTop: 50}} />
+              <View style={{ marginTop: 50 }} />
 
               <Pressable
                 style={{
