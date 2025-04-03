@@ -1,0 +1,50 @@
+import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
+import React from 'react'
+import HingePlus from './HingePlus'
+
+const SubscriptionScreen = () => {
+    const [index, setIndex] = React.useState(0)
+    const [routes] = React.useState([
+        { key: 'hingePlus', title: 'Hinge+' },
+        { key: 'hingeX', title: 'HingeX' },
+    ])
+
+    const renderScene = ({ route }) => {
+        switch(route.key) {
+            case 'hingePlus':
+                return <HingePlus />
+            case 'hingeX':
+                return <HingeX />
+            default:
+                return null
+        }
+    }
+
+    return (
+        <ScrollView>
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F8F8' }}>
+                <TabView
+                    navigationState={{ index, routes }}
+                    renderScene={renderScene}
+                    onIndexChange={setIndex}
+                    initialLayout={{ width: '100%' }}
+                    renderTabBar={props => (
+                        <TabBar
+                            {...props}
+                            indicatorStyle={{
+                                backgroundColor: index === 1 ? 'white' : '#9f4ec2'}}
+                            style = {{ backgroundColor: index === 1 ? '#181818' : '#F8F8F8' }}
+                            labelStyle={{ fontWeight: 'bold', fontWeight: 16 }}
+                            activeColor={index === 1 ? 'white' : '#9f4ec2'}
+                            inactiveColor={index === 1 ? '#C0C0C0' : '#202020'}
+                        />
+                    )}
+                ></TabView>
+        </SafeAreaView>
+    </ScrollView >
+  )
+}
+
+export default SubscriptionScreen
+
+const styles = StyleSheet.create({})

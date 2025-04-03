@@ -228,6 +228,12 @@ const StackNavigator = () => {
                         headerShown: false
                     }}
                 />
+
+                <Stack.Screen name="Subscription" component={SubscriptionScreen}
+                    options={{
+                        headerShown: false
+                    }}
+                />
             </Stack.Navigator>
         );
     }
