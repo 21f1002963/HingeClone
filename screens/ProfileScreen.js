@@ -23,6 +23,15 @@ const ProfileScreen = () => {
     }
   }
 
+  const checkActiveSubscription = () => {
+    if (!userInfo || !userInfo.subscription) return { isActive: false, plan: null }
+
+    const { activePlan } = userInfo.subscription.find(item => item.status === 'active')
+
+    return activePlan ? { isActive: true, plan: activePlan.plan } : { isActive: false, plan: null }
+  }
+  const { isActive, plan: planName } = checkActiveSubscription();
+
   const GetMore = () => {
     <View>
       <View style={{ flex: 1, margionTop: 30, marginHorizontal: 20 }}>
@@ -372,7 +381,9 @@ const ProfileScreen = () => {
           </View>
         </View>
         <View style={{ marginVertical: 10, justifyContent: 'center', alignItems: 'center' }}>
-          <Pressable>
+          <Pressable onPress={() => navigation.navigate('ProfileDetail', {
+            userInfo: userInfo,
+          })}>
             <Image
               style={{
                 width: 100,
@@ -388,6 +399,29 @@ const ProfileScreen = () => {
           <Text style={{ marginTop: 10, fontSize: 24, fontWeight: '500' }}>
             {userInfo?.firstName}
           </Text>
+        </View>
+
+        {isActive && (
+            <View
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                borderRadius: 25,
+                backgroundColor: 'purple',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: 10,
+              }}>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                }}>
+                {planName}
+              </Text>
+            </View>
+          )}
         </View>
 
         <TabView

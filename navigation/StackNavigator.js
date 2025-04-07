@@ -31,6 +31,7 @@ import PreFinalScreen from '../screens/PreFinalScreen'
 import WritePrompt from '../screens/WritePrompt'
 import { AuthContext } from '../AuthContext'
 import SendLikeScreen from '../screens/SendLikeScreen'
+import ProfileDetailScreen from '../screens/ProfileDetailScreen'
 
 const StackNavigator = () => {
     const Stack = createNativeStackNavigator();
@@ -230,6 +231,12 @@ const StackNavigator = () => {
                 />
 
                 <Stack.Screen name="Subscription" component={SubscriptionScreen}
+                    options={{
+                        headerShown: false
+                    }}
+                />
+
+                <Stack.Screen name="ProfileDetail" component={ProfileDetailScreen}
                     options={{
                         headerShown: false
                     }}
