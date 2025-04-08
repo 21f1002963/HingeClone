@@ -1,8 +1,18 @@
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
-import { AuthContext } from '../AuthContext'
-import { use, useEffect } from 'react'
-import UserChat from '../components/UserChat'
-import axios from 'axios'
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  Pressable,
+} from 'react-native';
+import React, {useContext, useState, useEffect} from 'react';
+import {AuthContext} from '../AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import {BASE_URL} from '../urls/url';
+import LottieView from 'lottie-react-native';
+import UserChat from '../components/UserChat';
 
 const ChatScreen = () => {
   const [matches, setMatches] = useState([])
@@ -33,19 +43,19 @@ const ChatScreen = () => {
           if (lastMessage?.senderId === userId) {
             theirTurn.push({
               ...item,
-              lastMessage: lastMessage.message,
+              lastMessage
             })
           } else {
             yourTurn.push({
               ...item,
-              lastMessage: lastMessage.message,
+              lastMessage
             })
           }
         } catch (error) {
-          console.error(error)
+          console.error('Error fetching', error)
         }
-      }))
-
+      })
+    )
     setCategorizedChats({
       yourTurn: yourTurn,
       theirTurn: theirTurn,
@@ -67,7 +77,7 @@ const ChatScreen = () => {
 
       setMatches(response.data.matches)
     } catch (error) {
-      console.error(error)
+      console.error('Error', error)
     } finally {
       setIsLoading(false)
     }
@@ -124,7 +134,7 @@ const ChatScreen = () => {
 
               {categorizedChats?.yourTurn?.length > 0 && (
                 <>
-                  <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12 }}>Your Turn</Text>\
+                  <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12 }}>Your Turn</Text>
                   {categorizedChats?.yourTurn?.map((item, index) => (
                     <UserChat key={index} item={item} userId={userId} />
                   ))}
@@ -173,7 +183,6 @@ const ChatScreen = () => {
                 style={{
                   padding: 12,
                   borderRadius: 22,
-
                   borderColor: '#E0E0E0',
                   borderWidth: 1,
                   marginTop: 15,

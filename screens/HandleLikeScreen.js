@@ -1,81 +1,96 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native'
-import React from 'react'
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  Pressable,
+  Alert,
+} from 'react-native';
+import React from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import Entypo from '@react-native-vector-icons/entypo';
+import AntDesign from '@react-native-vector-icons/ant-design';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { BASE_URL } from '../urls/url';
 
 const HandleLikeScreen = () => {
-    const route = useRoute();
+  const route = useRoute();
+  const navigation = useNavigation();
 
-    const createMatch = async () => {
-        try {
-            const token = await AsyncStorage.getItem('token');
-            const currenUserId = route?.params?.userId;
-            const selectedtUserId = route?.params?.userId;
+  const createMatch = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const currenUserId = route?.params?.userId;
+      const selectedtUserId = route?.params?.selectedUserId;
 
-            const response = await axios.post(`${BASE_URL}/creat-match`, {
-                currenUserId, selectedUserId
-            }, {headers: {Authorization: `Bearer ${token}`}});
+      const response = await axios.post(`${BASE_URL}/creat-match`, {
+        currenUserId, selectedtUserId
+      }, { headers: { Authorization: `Bearer ${token}` } });
 
-            if(response.status == 200){
-                navigation.goBack();
-            }
-        }
-        catch (error) {
-            console.error(error);
-        }
-    };
+      if (response.status == 200) {
+        navigation.goBack();
+      }
+    }
+    catch (error) {
+      console.error(error);
+    }
+  };
 
-    const match = () => {
-        Alert.alert('Accept Request?', `Match with ${route?.params?.name}`, [
-          {
-            text: 'Cancel',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-          {text: 'OK', onPress: () => createMatch()},
-        ]);
-      };
+  const match = () => {
+    Alert.alert('Accept Request?', `Match with ${route?.params?.name}`, [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      { text: 'OK', onPress: () => createMatch() },
+    ]);
+  };
 
-    return (
-        <>
-        <ScrollView style={{ flex: 1, backgroundColor: 'white', marginTop: 55, padding: 12 }}>
-            <View style={{ flex: 1, justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 15, fontWeight: '500' }}>All {route?.params?.likes}</Text>
-                <Text style={{ fontSize: 15, fontWeight: '500' }}>Back</Text>
+  return (
+    <>
+      <ScrollView style={{ flex: 1, backgroundColor: 'white', marginTop: 55, padding: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{ fontSize: 15, fontWeight: '500' }}>All {route?.params?.likes}</Text>
+          <Text style={{ fontSize: 15, fontWeight: '500' }}>Back</Text>
+        </View>
+
+        <View style={{marginVertical: 12}}>
+          {route?.params?.type === 'prompt' ? (
+            <View style={{height: 90}}>
+              <Text style={{
+                fontSize: 18,
+                fontWeight: 'bold'
+              }}>{route?.params?.question}</Text>
+              <Text style={{ fontSize: 16, marginTop: 8 }}>{route?.params?.answer}</Text>
             </View>
+          ) : (
+            <Image style={{ width: '100%', height: 100, borderRadius: 7, resizeMode: 'cover' }} source={{ uri: route?.params?.image }} />
+          )}
+        </View>
 
-            <View>
-                {route?.params?.type === 'prompt' ? (
-                    <View>
-                        <Text style={{
-                            fontSize: 18,
-                            fontWeight: 'bold'
-                        }}>{route?.params?.question}</Text>
-                        <Text style={{ fontSize: 16, marginTop: 8 }}>{route?.params?.answer}</Text>
-                    </View>
-                ) : (
-                    <Image style={{ width: '100%', height: 100, borderRadius: 7, resizeMode: 'cover' }} source={{ uri: route?.params?.image }} />
-                )}
-            </View>
+        <View
+          style={{
+            alignSelf: 'flex-start',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            backgroundColor: '#f7f0e1',
+            borderRadius: 5,
+            marginBottom: 8,
+            bottom: 20,
+          }}>
+          {(route?.params?.comment) ? (
+            <Text></Text>
+          ) : route?.params?.type == 'prompt' ? (
+            <Text>Liked your prompt</Text>
+          ) : (
+            <Text>Liked your image</Text>
+          )}
+        </View>
 
-            <View
-                style={{
-                    alignSelf: 'flex-start',
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    backgroundColor: '#f7f0e1',
-                    borderRadius: 5,
-                    marginBottom: 8,
-                    bottom: 20,
-                }}>
-                {(route?.params?.comment) ? (
-                    <Text></Text>
-                ) : route?.params?.type == 'prompt' ? (
-                    <Text>Liked your prompt</Text>
-                ) : (
-                    <Text>Liked your image</Text>
-                )}
-            </View>
-
-            <View style={{marginVertical: 16}}>
+        <View style={{ marginVertical: 16 }}>
           <View
             style={{
               flexDirection: 'row',
@@ -88,7 +103,7 @@ const HandleLikeScreen = () => {
                 alignItems: 'center',
                 gap: 10,
               }}>
-              <Text style={{fontSize: 22, fontWeight: 'bold'}}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold' }}>
                 {route?.params?.name}
               </Text>
               <View
@@ -98,7 +113,7 @@ const HandleLikeScreen = () => {
                   paddingVertical: 4,
                   borderRadius: 20,
                 }}>
-                <Text style={{textAlign: 'center', color: 'white'}}>
+                <Text style={{ textAlign: 'center', color: 'white' }}>
                   new here
                 </Text>
               </View>
@@ -113,7 +128,7 @@ const HandleLikeScreen = () => {
             </View>
           </View>
 
-          <View style={{marginVertical: 15}}>
+          <View style={{ marginVertical: 15 }}>
             <View>
               {route?.params?.imageUrls?.length > 0 && (
                 <View>
@@ -155,7 +170,7 @@ const HandleLikeScreen = () => {
               )}
             </View>
 
-            <View style={{marginVertical: 15}}>
+            <View style={{ marginVertical: 15 }}>
               {route?.params?.prompts.slice(0, 1).map(prompt => (
                 <>
                   <View
@@ -167,7 +182,7 @@ const HandleLikeScreen = () => {
                       height: 150,
                       justifyContent: 'center',
                     }}>
-                    <Text style={{fontSize: 15, fontWeight: '500'}}>
+                    <Text style={{ fontSize: 15, fontWeight: '500' }}>
                       {prompt.question}
                     </Text>
                     <Text
@@ -191,7 +206,7 @@ const HandleLikeScreen = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                       shadowColor: '#000',
-                      shadowOffset: {width: 0, height: 1},
+                      shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.25,
                       shadowRadius: 3.84,
                       // Shadow properties for Android
@@ -216,7 +231,7 @@ const HandleLikeScreen = () => {
 
             <View>
               {route?.params?.imageUrls?.slice(1, 3).map((item, index) => (
-                <View key={index} style={{marginVertical: 10}}>
+                <View key={index} style={{ marginVertical: 10 }}>
                   <Image
                     style={{
                       width: '100%',
@@ -256,7 +271,7 @@ const HandleLikeScreen = () => {
               ))}
             </View>
 
-            <View style={{marginVertical: 15}}>
+            <View style={{ marginVertical: 15 }}>
               {route?.params?.prompts.slice(1, 2).map(prompt => (
                 <>
                   <View
@@ -268,7 +283,7 @@ const HandleLikeScreen = () => {
                       height: 150,
                       justifyContent: 'center',
                     }}>
-                    <Text style={{fontSize: 15, fontWeight: '500'}}>
+                    <Text style={{ fontSize: 15, fontWeight: '500' }}>
                       {prompt.question}
                     </Text>
                     <Text
@@ -292,7 +307,7 @@ const HandleLikeScreen = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                       shadowColor: '#000',
-                      shadowOffset: {width: 0, height: 1},
+                      shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.25,
                       shadowRadius: 3.84,
                       // Shadow properties for Android
@@ -315,7 +330,7 @@ const HandleLikeScreen = () => {
 
             <View>
               {route?.params?.imageUrls?.slice(3, 4).map((item, index) => (
-                <View key={index} style={{marginVertical: 10}}>
+                <View key={index} style={{ marginVertical: 10 }}>
                   <Image
                     style={{
                       width: '100%',
@@ -353,7 +368,7 @@ const HandleLikeScreen = () => {
                 </View>
               ))}
             </View>
-            <View style={{marginVertical: 15}}>
+            <View style={{ marginVertical: 15 }}>
               {route?.params?.prompts.slice(2, 3).map(prompt => (
                 <>
                   <View
@@ -365,7 +380,7 @@ const HandleLikeScreen = () => {
                       height: 150,
                       justifyContent: 'center',
                     }}>
-                    <Text style={{fontSize: 15, fontWeight: '500'}}>
+                    <Text style={{ fontSize: 15, fontWeight: '500' }}>
                       {prompt.question}
                     </Text>
                     <Text
@@ -389,7 +404,7 @@ const HandleLikeScreen = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                       shadowColor: '#000',
-                      shadowOffset: {width: 0, height: 1},
+                      shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.25,
                       shadowRadius: 3.84,
                       // Shadow properties for Android
@@ -412,7 +427,7 @@ const HandleLikeScreen = () => {
 
             <View>
               {route?.params?.imageUrls?.slice(4, 7).map((item, index) => (
-                <View key={index} style={{marginVertical: 10}}>
+                <View key={index} style={{ marginVertical: 10 }}>
                   <Image
                     style={{
                       width: '100%',
@@ -452,9 +467,9 @@ const HandleLikeScreen = () => {
             </View>
           </View>
         </View>
-        </ScrollView>
+      </ScrollView>
 
-        <Pressable
+      <Pressable
         onPress={match}
         style={{
           position: 'absolute',
@@ -468,14 +483,14 @@ const HandleLikeScreen = () => {
           alignItems: 'center',
         }}>
         <Image
-          style={{width: 30, height: 30, resizeMode: 'contain'}}
+          style={{ width: 30, height: 30, resizeMode: 'contain' }}
           source={{
             uri: 'https://cdn-icons-png.flaticon.com/128/2724/2724657.png',
           }}
         />
-        </Pressable>
+      </Pressable>
     </>
-    )
+  )
 }
 
 export default HandleLikeScreen

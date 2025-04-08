@@ -1,5 +1,21 @@
-import { ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native'
-import React, { useContext } from 'react'
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  ImageBackground,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import React, { useState, useContext } from 'react';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import RazorpayCheckout from 'react-native-razorpay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { BASE_URL } from '../urls/url';
+import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../AuthContext';
 
 const HingePlus = () => {
   const plans = [
@@ -30,7 +46,8 @@ const HingePlus = () => {
   ];
   const [plan, setPlan] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const {userId} = useContext(AuthContext);
+  const { userId } = useContext(AuthContext);
+  const navigation = useNavigation();
   const pay = async () => {
     try {
       setIsLoading(true);
@@ -39,7 +56,7 @@ const HingePlus = () => {
         description: 'Adding To Wallet',
         currency: 'INR',
         name: 'Hinge',
-        key: 'rzp_test_E3GWYimxN7YMk8',
+        key: '',
         amount: plan?.price.split('/')[0] * 100,
         prefill: {
           email: 'void@razorpay.com',
@@ -56,7 +73,7 @@ const HingePlus = () => {
 
       const response = await axios.post(`${BASE_URL}/subscribe`, {
         userId, plan, type
-      }, {headers : {Authorization: `Bearer ${token}`}});
+      }, { headers: { Authorization: `Bearer ${token}` } });
 
       if (response.status == 200) {
         Alert.alert('Success', 'You have been subscribed to Hinge Plus', [
@@ -65,7 +82,7 @@ const HingePlus = () => {
             onPress: () => console.log('Cancel Pressed'),
             style: 'cancel',
           },
-          {text: 'OK', onPress: () => navigation.goBack()},
+          { text: 'OK', onPress: () => navigation.goBack() },
         ]);
       } else {
         console.log('Error creating order', response.data);
@@ -104,7 +121,11 @@ const HingePlus = () => {
               {plans?.map((item) => (
                 <Pressable onPress={() => setPlan(item)} style={{ marginRight: 10 }}>
                   <View style={{ justifyContent: 'center', alignItems: 'center', borderTopLeftRadius: 10, borderTopRightRadius: 10, padding: 10, backgroundColor: plan?.name === item?.name ? '#8e33b5' : 'B0B0B0' }}>
-                    <Text>{item?.name}</Text>
+                    <Text style={{
+                      textAlign: 'center',
+                      color: 'white',
+                      fontWeight: '500',
+                    }}>{item?.name}</Text>
                   </View>
                   <View style={{
                     padding: 10,
@@ -140,7 +161,7 @@ const HingePlus = () => {
                 alignItems: 'center',
                 backgroundColor: '#E0E0E0',
               }}>
-                <Ionicons name="infinite-outline" size={2} color="black" />
+                <Ionicons name="infinite-outline" size={22} color="black" />
               </View>
               <Text style={{
                 fontSize: 17,
@@ -159,7 +180,7 @@ const HingePlus = () => {
                 alignItems: 'center',
                 backgroundColor: '#E0E0E0',
               }}>
-                <Ionicons name="person-outline" size={2} color="black" />
+                <Ionicons name="person-outline" size={22} color="black" />
               </View>
               <Text style={{
                 fontSize: 17,
@@ -178,7 +199,7 @@ const HingePlus = () => {
                 alignItems: 'center',
                 backgroundColor: '#E0E0E0',
               }}>
-                <Ionicons name="filter-outline" size={2} color="black" />
+                <Ionicons name="filter-outline" size={22} color="black" />
               </View>
               <Text style={{
                 fontSize: 17,
@@ -197,7 +218,7 @@ const HingePlus = () => {
                 alignItems: 'center',
                 backgroundColor: '#E0E0E0',
               }}>
-                <Ionicons name="funnel-outline" size={2} color="black" />
+                <Ionicons name="funnel-outline" size={22} color="black" />
               </View>
               <Text style={{
                 fontSize: 17,
@@ -216,7 +237,7 @@ const HingePlus = () => {
                 alignItems: 'center',
                 backgroundColor: '#E0E0E0',
               }}>
-                <Ionicons name="search-outline" size={2} color="black" />
+                <Ionicons name="search-outline" size={22} color="black" />
               </View>
               <Text style={{
                 fontSize: 17,
@@ -241,18 +262,18 @@ const HingePlus = () => {
               marginHorizontal: 10,
               borderRadius: 20,
             }}>
-              {isloading ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  textAlign: 'center',
-                  letterSpacing: 0.6,
-                  color: 'white',
-                }}>Get {plan?.plan} for {plan?.price}
-                </Text>
-              )}
+            {isloading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '600',
+                textAlign: 'center',
+                letterSpacing: 0.6,
+                color: 'white',
+              }}>Get {plan?.plan} for {plan?.price}
+              </Text>
+            )}
           </Pressable>
         )
       }
