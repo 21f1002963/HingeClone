@@ -1,19 +1,89 @@
-import { useState } from 'react'
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  SafeAreaView,
+  Pressable,
+  Image,
+  Alert,
+} from 'react-native';
+import React, {useState, useContext, useCallback} from 'react';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import Feather from '@react-native-vector-icons/feather';
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
+import {AuthContext} from '../AuthContext';
+import {TabBar, TabView} from 'react-native-tab-view';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import axios from 'axios';
+import {BASE_URL} from '../urls/url';
+import {BottomModal} from 'react-native-modals';
+import {SlideAnimation} from 'react-native-modals';
+import {ModalContent} from 'react-native-modals';
+import RazorpayCheckout from 'react-native-razorpay';
 
 const ProfileScreen = () => {
   const { userId, userInfo, setUserInfo } = useContext(UserContext)
+  const navigation = useNavigation()
+  const [modalVisible, setModalVisible] = useState(false);
+  const [plan, setPlan] = useState('')
+  const [index, setIndex] = useState(0)
   const [routes] = useState([
     { key: 'getMore', title: 'Get More' },
     { key: 'safety', title: 'Safety' },
     { key: 'myHinge', title: 'My Hinge' },
   ])
-  const [index, setIndex] = useState(0)
+
+  const roses = [
+    {
+      id: '0',
+      plan: '3 Roses',
+      price: '283.33 each',
+    },
+    {
+      id: '0',
+      plan: '12 Roses',
+      price: '283.33 each',
+    },
+    {
+      id: '0',
+      plan: '50 Roses',
+      price: '283.33 each',
+    },
+  ];
+
+  const getUserDetails = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/user-info`, {
+        params: {userId},
+      });
+
+      if (response.status === 200) {
+        const userData = response.data.user;
+
+        // Only update state if the data is different
+        if (JSON.stringify(userData) !== JSON.stringify(userInfo)) {
+          setUserInfo(userData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      if (userId) {
+        getUserDetails();
+      }
+    }, [userId]), // This dependency ensures that getUserDetails is called when userId changes
+  );
 
   const renderScene = ({ route }) => {
     switch (route.key) {
       case 'getMore':
-        return <GetMore />
+        return <GetMore modalVisible={modalVisible}
+        setModalVisible={setModalVisible}/>
       case 'safety':
         return <Safety />
       case 'myHinge':
@@ -30,9 +100,66 @@ const ProfileScreen = () => {
 
     return activePlan ? { isActive: true, plan: activePlan.plan } : { isActive: false, plan: null }
   }
+
+  const initiatePayment = async () => {
+    try {
+      if (!plan || !plan.price) {
+        return;
+      }
+
+      const options = {
+        description: 'Adding To Wallet',
+        currency: 'INR',
+        name: 'Hinge',
+        key: 'rzp_test_E3GWYimxN7YMk8',
+        amount: plan?.price.split(' ')[0] * 100,
+        prefill: {
+          email: 'void@razorpay.com',
+          contact: '9191919191',
+          name: 'RazorPay Software',
+        },
+        theme: {color: '#900C3F'},
+      };
+
+      try {
+        const data = await RazorpayCheckout.open(options);
+        console.log('payment data', data);
+      } catch (error) {
+        console.log('Error processing the payment', error);
+      }
+
+      const rosesToAdd = plan?.plan.split(' ')[0];
+
+      const response = await axios.post(`${BASE_URL}/payment-success`, {
+        userId,
+        rosesToAdd,
+      });
+
+      if (response.status == 200) {
+        setModalVisible(false);
+        console.log('Order created succesfully!');
+      }
+    } catch (error) {
+      console.log('Error', error);
+    }
+  };
+
+  const pay = async item => {
+    setPlan(item);
+
+    Alert.alert('Buy Roses', `buying ${plan?.plan?.split(' ')[0]}`, [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {text: 'OK', onPress: () => initiatePayment()},
+    ]);
+  };
+  
   const { isActive, plan: planName } = checkActiveSubscription();
 
-  const GetMore = () => {
+  const GetMore = ({modalVisible, setModalVisible}) => {
     <View>
       <View style={{ flex: 1, margionTop: 30, marginHorizontal: 20 }}>
         <Pressable onPress={() => navigation.navigate('Subscription')}>
@@ -96,10 +223,10 @@ const ProfileScreen = () => {
           }}>
           <Ionicons name="rose-outline" size={22} color='white' />
         </View>
-        <View>
-          <Text style={{ fontSize: 15, fontWeight: '600' }}>Boost</Text>
-          <Text style={{ color: '#282828', marginTop: 3 }}>Get seen by 11x more people</Text>
-        </View>
+        <Pressable onPress={() => setModalVisible(!modalVisible)}>
+          <Text style={{ fontSize: 15, fontWeight: '600' }}>Roses</Text>
+          <Text style={{ color: '#282828', marginTop: 3 }}> 2x as likely to lead to a date</Text>
+        </Pressable>
       </View>
     </View>
   }
@@ -256,7 +383,6 @@ const ProfileScreen = () => {
         <View
           style={{
             marginVertical: 20,
-
             flexDirection: 'row',
             alignItems: 'center',
             gap: 12,
@@ -359,6 +485,7 @@ const ProfileScreen = () => {
             <Text style={{ fontSize: 26, fontFamily: 'Helvetica-Bold' }}>
               HINGE
             </Text>
+          </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <Pressable>
@@ -379,7 +506,7 @@ const ProfileScreen = () => {
               </Pressable>
             </View>
           </View>
-        </View>
+
         <View style={{ marginVertical: 10, justifyContent: 'center', alignItems: 'center' }}>
           <Pressable onPress={() => navigation.navigate('ProfileDetail', {
             userInfo: userInfo,
@@ -396,10 +523,10 @@ const ProfileScreen = () => {
               source={{ uri: userInfo?.imageUrls[1] }}
             />
           </Pressable>
+
           <Text style={{ marginTop: 10, fontSize: 24, fontWeight: '500' }}>
             {userInfo?.firstName}
           </Text>
-        </View>
 
         {isActive && (
             <View
@@ -432,7 +559,7 @@ const ProfileScreen = () => {
           renderTabBar={props => (
             <TabBar
               {...props}
-              indicatorStyle={{ backgroundColor: 'purple' }}
+              indicatorStyle={{ backgroundColor: 'black' }}
               style={{ backgroundColor: '#F8F8F8' }}
               labelStyle={{ fontWeight: 'bold' }}
               activeColor='black'
@@ -441,6 +568,87 @@ const ProfileScreen = () => {
           )}
         />
       </SafeAreaView>
+
+      <BottomModal
+        swipeDirection={['up', 'down']}
+        swipeThreshold={200}
+        modalAnimation={
+          new SlideAnimation({
+            slideFrom: 'bottom',
+          })
+        }
+        visible={modalVisible}
+        onTouchOutside={() => setModalVisible(!modalVisible)}
+        onHardwareBackPress={() => setModalVisible(!modalVisible)}>
+        <ModalContent style={{width: '100%', height: 'auto'}}>
+          <View>
+            <Text
+              style={{fontSize: 26, fontWeight: 'bold', textAlign: 'center'}}>
+              Catch their eye by sending a rose
+            </Text>
+            <Text
+              style={{
+                marginTop: 16,
+                textAlign: 'center',
+                fontSize: 15,
+                color: '#181818',
+                lineHeight: 22,
+              }}>
+              Roses are always seen first and are twice as likely to lead to a
+              date. A purchased rose never expires
+            </Text>
+
+            <ScrollView
+              contentContainerStyle={{marginTop: 30, marginBottom: 30}}
+              horizontal
+              showsHorizontalScrollIndicator={false}>
+              {roses?.map((item, index) => (
+                <Pressable
+                  style={{
+                    padding: 12,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderColor: '#E0E0E0',
+                    borderWidth: 0.6,
+                    marginRight: 20,
+                    borderRadius: 12,
+                    width: 200,
+                  }}
+                  key={index}>
+                  <Text style={{fontSize: 20, fontWeight: 'bold'}}>
+                    {item?.plan}
+                  </Text>
+
+                  <Image
+                    style={{width: 60, height: 60, marginVertical: 15}}
+                    source={{
+                      uri: 'https://cdn-icons-png.flaticon.com/128/4006/4006798.png',
+                    }}
+                  />
+
+                  <Text style={{fontSize: 15, fontWeight: '500'}}>
+                    ₹ {item?.price}
+                  </Text>
+
+                  <Pressable
+                    onPress={() => pay(item)}
+                    style={{
+                      backgroundColor: '#800080',
+                      padding: 12,
+                      borderRadius: 22,
+                      marginTop: 10,
+                      width: 110,
+                    }}>
+                    <Text style={{textAlign: 'center', color: 'white'}}>
+                      Select
+                    </Text>
+                  </Pressable>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </ModalContent>
+      </BottomModal>
     </ScrollView >
   )
 }

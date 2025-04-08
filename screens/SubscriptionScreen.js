@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native'
-import React from 'react'
-import HingePlus from './HingePlus'
+import { StyleSheet, Text, View, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { TabBar, TabView } from 'react-native-tab-view';
+import HingePlus from './HingePlus';
+import HingeX from './HingeX';
 
 const SubscriptionScreen = () => {
     const [index, setIndex] = React.useState(0)
@@ -10,7 +12,7 @@ const SubscriptionScreen = () => {
     ])
 
     const renderScene = ({ route }) => {
-        switch(route.key) {
+        switch (route.key) {
             case 'hingePlus':
                 return <HingePlus />
             case 'hingeX':
@@ -21,7 +23,7 @@ const SubscriptionScreen = () => {
     }
 
     return (
-        <ScrollView>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F8F8' }}>
                 <TabView
                     navigationState={{ index, routes }}
@@ -32,17 +34,18 @@ const SubscriptionScreen = () => {
                         <TabBar
                             {...props}
                             indicatorStyle={{
-                                backgroundColor: index === 1 ? 'white' : '#9f4ec2'}}
-                            style = {{ backgroundColor: index === 1 ? '#181818' : '#F8F8F8' }}
+                                backgroundColor: index === 1 ? 'white' : '#9f4ec2'
+                            }}
+                            style={{ backgroundColor: index === 1 ? '#181818' : '#F8F8F8' }}
                             labelStyle={{ fontWeight: 'bold', fontWeight: 16 }}
                             activeColor={index === 1 ? 'white' : '#9f4ec2'}
                             inactiveColor={index === 1 ? '#C0C0C0' : '#202020'}
                         />
                     )}
                 ></TabView>
-        </SafeAreaView>
-    </ScrollView >
-  )
+            </SafeAreaView>
+        </ScrollView >
+    )
 }
 
 export default SubscriptionScreen

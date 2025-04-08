@@ -1,5 +1,20 @@
-import { StyleSheet, Text, View, ScrollView, Image, ImageBackground } from 'react-native'
-import React from 'react'
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  ImageBackground,
+  Pressable,
+  Image,
+  Alert,
+} from 'react-native';
+import React, {useState} from 'react';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import {AuthContext} from '../AuthContext';
+import {useNavigation} from '@react-navigation/native';
+import RazorpayCheckout from 'react-native-razorpay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const HingeX = () => {
   const planss = [
@@ -29,6 +44,63 @@ const HingeX = () => {
     },
   ];
   const [plan, setPlan] = React.useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const {userId} = useContext(AuthContext);
+  const navigation = useNavigation();
+
+  const pay = async () => {
+    try {
+      setIsLoading(true);
+      const options = {
+        description: 'Adding To Wallet',
+        currency: 'INR',
+        name: 'Hinge',
+        key: 'rzp_test_E3GWYimxN7YMk8',
+        amount: plan?.price.split('/')[0] * 100,
+        prefill: {
+          email: 'void@razorpay.com',
+          contact: '9191919191',
+          name: 'RazorPay Software',
+        },
+        theme: {color: '#900C3F'},
+      };
+
+      const data = await RazorpayCheckout.open(options);
+
+      const type = 'Hinge X';
+      const token = await AsyncStorage.getItem('token');
+
+      const response = await axios.post(
+        `${BASE_URL}/subscribe`,
+        {
+          userId,
+          plan,
+          type,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.status == 200) {
+        Alert.alert('Success', 'You have been subscribed to Hinge X', [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('Cancel Pressed'),
+            style: 'cancel',
+          },
+          {text: 'OK', onPress: () => navigation.goBack()},
+        ]);
+      } else {
+        console.log('Error creating order', response.data);
+      }
+    } catch (error) {
+      console.log('Error', error);
+    }
+  };
+
   return (
     <>
     <ScrollView>
@@ -291,7 +363,9 @@ const HingeX = () => {
 
     {plan && (
       <Pressable style={{backgroundColor: '#181818', padding: 15}}>
-        <Pressable style={{
+        <Pressable 
+        onPress={pay}
+        style={{
               backgroundColor: 'white',
               marginTop: 'auto',
               marginBottom: 5,
